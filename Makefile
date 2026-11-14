@@ -12,11 +12,10 @@ PACKAGE_VERSION = 2.4.1
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = YTMusicUltimate
-# 1. Include .swift files into the source search path
-$(TWEAK_NAME)_FILES = $(filter-out Source/Sideloading.x, $(shell find Source \( -name '*.x' -o -name '*.xm' -o -name '*.m' -o -name '*.swift' \)))
+# 1. Search for all source files (excluding .swift to avoid toolchain compilation errors)
+$(TWEAK_NAME)_FILES = $(filter-out Source/Sideloading.x, $(shell find Source \( -name '*.x' -o -name '*.xm' -o -name '*.m' \)))
 $(TWEAK_NAME)_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -DTWEAK_VERSION=$(PACKAGE_VERSION)
 $(TWEAK_NAME)_FRAMEWORKS = UIKit Foundation AVFoundation AudioToolbox VideoToolbox
-$(TWEAK_NAME)_WEAK_FRAMEWORKS = Translation
 $(TWEAK_NAME)_OBJ_FILES = $(shell find Source/Utils/lib -name '*.a')
 $(TWEAK_NAME)_LIBRARIES = bz2 c++ iconv z
 ifeq ($(SIDELOADING),1)
