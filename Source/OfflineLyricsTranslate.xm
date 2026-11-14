@@ -1,6 +1,7 @@
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
 
+// 宣告本地翻譯橋接函式
 @interface LocalLyricsTranslator : NSObject
 + (void)translate:(NSString *)text completion:(void (^)(NSString * _Nullable result))completion;
 @end
@@ -24,8 +25,14 @@
 - (void)layoutSubviews {
     %orig;
     
+    // Use safe KVC or standard casting to get the label
     UILabel *label = [self valueForKey:@"lyricLabel"];
-    if (!label || label.text.length == 0) return;
+    if (!label || !isKindOfClass:[UILabel class]) {
+        // Fallback if key varies
+        return;
+    }
+    
+    if (label.text.length == 0) return;
     
     // Store original English text to prevent duplicate triggers
     NSString *originalText = objc_getAssociatedObject(label, "originalLyricText");
