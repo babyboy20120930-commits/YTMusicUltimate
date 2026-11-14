@@ -5,17 +5,26 @@ import Translation
 @objc public class LocalLyricsTranslator: NSObject {
     @objc public static func translate(_ text: String, completion: @escaping (String?) -> Void) {
         Task {
-            let source = Locale.Language(identifier: "en")
-            let target = Locale.Language(identifier: "zh-Hant")
-            let session = TranslationSession(installedSource: source, target: target)
-            
             do {
-                let response = try await session.translate(text)
+                let configuration = TranslationSession.Configuration(
+                    source: Locale.Language(identifier: "en"),
+                    target: Locale.Language(identifier: "zh-Hant")
+                )
+                
+                // Retrieve the translation session asynchronously using system APIs
+                let translatedText = try await Task.detached {
+                    // Initialize the offline translation session and translate text
+                    let session = try TranslationSession(configuration: configuration)
+                    let response = try await session.translate(text)
+                    return response.targetText
+                }.value
+                
                 DispatchQueue.main.async {
-                    completion(response.targetText)
+                    completion(translatedText)
                 }
             } catch {
                 DispatchQueue.main.async {
+                    print("Translation failed: \(error.localizedDescription)")
                     completion(nil)
                 }
             }
