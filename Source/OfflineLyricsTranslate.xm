@@ -9,10 +9,9 @@
 %hook YTMLyricsViewController
 
 - (void)didTapTranslateButton:(id)sender {
-    // Do not call %orig to block the original paid verification popup
-    // Instead, trigger a reload to apply local translation
+    // Block the original paid verification popup and trigger local update safely
     if ([self respondsToSelector:@selector(reloadData)]) {
-        [self performSelector:@selector(reloadData)];
+        ((void (*)(id, SEL))[self methodForSelector:@selector(reloadData)])(self, @selector(reloadData));
     }
 }
 
@@ -24,9 +23,9 @@
 - (void)layoutSubviews {
     %orig;
     
-    // Safely extract the lyric label via KVC
+    // Safely extract the lyric label using KVC without forward declaration issues
     id labelObj = [self valueForKey:@"lyricLabel"];
-    if (![labelObj isKindOfClass:[UILabel class]]) return;
+    if (!labelObj || ![labelObj isKindOfClass:[UILabel class]]) return;
     
     UILabel *label = (UILabel *)labelObj;
     if (label.text.length == 0) return;
@@ -58,7 +57,10 @@
                 
                 label.numberOfLines = 0;
                 label.attributedText = attrStr;
-                [self setNeedsLayout];
+                
+                if ([self respondsToSelector:@selector(setNeedsLayout)]) {
+                    ((void (*)(id, SEL))[self methodForSelector:@selector(setNeedsLayout)])(self, @selector(setNeedsLayout));
+                }
             }
         }];
     }
