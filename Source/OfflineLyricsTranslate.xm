@@ -5,13 +5,21 @@
 + (void)translate:(NSString *)text completion:(void (^)(NSString * _Nullable result))completion;
 @end
 
+// Explicitly declare interfaces to prevent forward declaration compiler errors
+@interface YTMLyricsViewController : UIViewController
+- (void)reloadData;
+@end
+
+@interface YTMLyricsLineCell : UITableViewCell
+@end
+
 // 1. Intercept the translation button tap to block server verification and the premium upsell popup
 %hook YTMLyricsViewController
 
 - (void)didTapTranslateButton:(id)sender {
     // Block the original paid verification popup and trigger local update safely
     if ([self respondsToSelector:@selector(reloadData)]) {
-        ((void (*)(id, SEL))[self methodForSelector:@selector(reloadData)])(self, @selector(reloadData));
+        [self reloadData];
     }
 }
 
@@ -23,8 +31,8 @@
 - (void)layoutSubviews {
     %orig;
     
-    // Safely extract the lyric label using KVC without forward declaration issues
-    id labelObj = [self valueForKey:@"lyricLabel"];
+    // Safely extract the lyric label using KVC
+    id labelObj = [self valueForKey:@"label"]; // 若畫面沒生效可改回 "lyricLabel"
     if (!labelObj || ![labelObj isKindOfClass:[UILabel class]]) return;
     
     UILabel *label = (UILabel *)labelObj;
@@ -58,9 +66,7 @@
                 label.numberOfLines = 0;
                 label.attributedText = attrStr;
                 
-                if ([self respondsToSelector:@selector(setNeedsLayout)]) {
-                    ((void (*)(id, SEL))[self methodForSelector:@selector(setNeedsLayout)])(self, @selector(setNeedsLayout));
-                }
+                [self setNeedsLayout];
             }
         }];
     }
